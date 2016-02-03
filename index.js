@@ -204,17 +204,24 @@
     var textInput = $('<input type="text" />');
     var selectModel1 = $('<select class="filter-models-select"></select>');
     var selectModel2 = $('<select class="filter-models-select"></select>');
+    var rule = $('<select class="filter-model-rule"><option value="IN">IN</option><option value="NOTIN">NOT IN</option></select>');
     var removeButton = $('<span class="btn remove"><i class="fa fa-minus"></i></span>').on('click', function() {
       self.clearAll();
     });
     if (self.$models) {
+      selectModel1
+        .append($('<option disabled selected>Select Model</option>'));
       selectModel2
         .append($('<option disabled selected>Select Model</option>'));
       self.$models.forEach(function(value) {
+        selectModel1
+          .append($('<option value="' + value + '">' + value + '</option>'));
         selectModel2
           .append($('<option value="' + value + '">' + value + '</option>'));
       });
     } else {
+      selectModel1
+        .append($('<option disabled selected>No Models defined.</option>'));
       selectModel2
         .append($('<option disabled selected>No Models defined.</option>'));
     }
@@ -223,7 +230,8 @@
       $(this).parent().trigger('updaterules:options');
     });
 
-    self.$selectModels.append(removeButton).append(selectModel2);
+    textAndModel.append(textInput).append(selectModel1);
+    self.$selectModels.append(removeButton).append(textAndModel).append(rule).append(selectModel2);
     self.$container.append(self.$selectModels);
   }
 
