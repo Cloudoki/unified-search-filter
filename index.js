@@ -200,28 +200,30 @@
 
   function getModelsAsOptions(self) {
     self.$selectModels.html('');
-    var textAndModel = $('');
-    var selectModel = $('<select class="filter-models-select"></select>');
+    var textAndModel = $('<div></div>');
+    var textInput = $('<input type="text" />');
+    var selectModel1 = $('<select class="filter-models-select"></select>');
+    var selectModel2 = $('<select class="filter-models-select"></select>');
     var removeButton = $('<span class="btn remove"><i class="fa fa-minus"></i></span>').on('click', function() {
       self.clearAll();
     });
     if (self.$models) {
-      selectModel
+      selectModel2
         .append($('<option disabled selected>Select Model</option>'));
       self.$models.forEach(function(value) {
-        selectModel
+        selectModel2
           .append($('<option value="' + value + '">' + value + '</option>'));
       });
     } else {
-      selectModel
+      selectModel2
         .append($('<option disabled selected>No Models defined.</option>'));
     }
-    selectModel.change(function() {
+    selectModel2.change(function() {
       self.$selectedModel = $(this).val();
       $(this).parent().trigger('updaterules:options');
     });
 
-    self.$selectModels.append(removeButton).append(selectModel);
+    self.$selectModels.append(removeButton).append(selectModel2);
     self.$container.append(self.$selectModels);
   }
 
