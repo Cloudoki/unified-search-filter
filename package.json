@@ -1,0 +1,29 @@
+{
+  "name": "unified-search-filter",
+  "version": "0.1.0",
+  "description": "A search query maker.",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "lint": "eslint ./"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cloudoki/unified-search-filter.git"
+  },
+  "keywords": [
+    "search",
+    "filter"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Cloudoki/unified-search-filter/issues"
+  },
+  "homepage": "https://github.com/Cloudoki/unified-search-filter#readme",
+  "devDependencies": {
+    "eslint": "^1.10.3",
+    "eslint-config-airbnb": "^3.1.0"
+  }
+}

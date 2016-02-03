@@ -7,106 +7,50 @@
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
     -->
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
-    <style type="text/css">
-    .search {
-        margin-top: 100px;
-    }
-
-    .over-input {
-        position: relative;
-        margin-left: 2px;
-        margin-top: -25px;
-        width: 50px;
-    }
-
-    .filter-input {
-        -moz-appearance: textfield;
-        -webkit-appearance: textfield;
-        background-color: white;
-        background-color: -moz-field;
-        border: 1px solid darkgray;
-        box-shadow: 1px 1px 1px 0 lightgray inset;
-        font: -moz-field;
-        font: -webkit-small-control;
-        margin-top: 5px;
-        padding: 3px 3px;
-        width: 100%;
-        font-size: 1em;
-    }
-
-    .input-bg {
-        padding: 10px 5px;
-        font-size: 1.5em;
-    }
-
-    [contenteditable="true"].filter-single-line {
-        white-space: nowrap;
-        overflow: hidden;
-    }
-
-    [contenteditable="true"].filter-single-line br {
-        display: none;
-    }
-
-    [contenteditable="true"].filter-single-line * {
-        display: inline;
-        white-space: nowrap;
-    }
-
-    .filter-dropdown {
-        padding: 15px;
-        display: none;
-    }
-
-    .filter-plus {
-        padding: 1px 5px;
-        margin: 0;
-        font-size: 12px;
-        transition: all linear 0.15s;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="filter.css">
     <title>Filter test</title>
 </head>
 
 <body class="container-fluid">
-    <input data-role="naturalsearchbox" value="h" />
-    <input data-role="naturalsearchbox" value="v" />
+    <input data-role="unifiedSearchFilter" value="input data" />
+    <input data-role="unifiedSearchFilter" value="more data" />
     <button type="button" id="destroy">destroy</button>
-    <div class="search">
-        <div id="input" class="filter-single-line filter-input" contenteditable="true"></div>
-        <div class="over-input">
-            <div class="btn-group">
-                <button type="button" class="btn btn-success btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-plus"></i>
-                </button>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item">Action</a>
-                    <a class="dropdown-item">Another action</a>
-                    <a class="dropdown-item">Something else here</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item">Separated link</a>
-                </div>
-            </div>
-            <i class="fa fa-fw fa-search"></i>
-        </div>
-    </div>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-<!--
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone-min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.2.1/mustache.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
-  -->
-<script src="index.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script src="../index.js"></script>
 <script>
-$('[data-role="naturalsearchbox"]').naturalsearchbox({
-    text: 'text'
+$('[data-role="unifiedSearchFilter"]').unifiedSearchFilter({
+    Models: {
+        identities: {
+            type: 'text',
+            name: 'text',
+            interprise: 'number',
+            country: 'text',
+            legalForm: 'text',
+            location: 'text',
+        },
+        account: {
+            ID: 'number',
+            uniqueName: 'text',
+            name: 'text',
+        },
+        users: {
+            ID: 'number',
+            email: 'email',
+            firstName: 'text',
+            lastName: 'text',
+            "birthday": "date",
+        },
+    },
+    /*
+    dropdownShowIcon: '<i class="fa fa-caret-down"></i>',
+    dropdownHideIcon: '<i class="fa fa-caret-up"></i>',
+    */
 });
 
 $('#destroy').on('click', function() {
-    $('[data-role="naturalsearchbox"]').naturalsearchbox('destroy');
-    $('#destroy').html($('#destroy').html() === 'destroy' ? 'create' : 'destroy');
+    $('[data-role="unifiedSearchFilter"]').unifiedSearchFilter('destroy');
 });
 </script>
 
