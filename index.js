@@ -93,6 +93,7 @@
     this.$plus = $(options.dropdownShowIcon || '<i class="fa fa-plus"></i>');
     this.$minus = $(options.dropdownHideIcon || '<i class="fa fa-minus"></i>');
 
+    this.$wrapper = $('<div class="filter-wrapper"></div>');
     this.$plusButton = $('<button class="filter-addButton"></button>');
 
     // TODO: future feature add contenteditable to filter so it can be
@@ -111,9 +112,11 @@
     this.$condition = $('<li>Add Condition</li>');
     this.$addModel = $('<li data-type="model">Model</li>');
 
-    this.$element.before(this.$container);
-    this.$element.after(this.$selectionOptionsContainer);
-    this.$element.after(this.$plusButton);
+
+    this.$element.before(this.$wrapper);
+    this.$wrapper.append(this.$container);
+    this.$container.after(this.$selectionOptionsContainer);
+    this.$container.after(this.$plusButton);
 
     this.$plusButton.html(this.$plus);
 
