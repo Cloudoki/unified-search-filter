@@ -202,24 +202,25 @@
   }
 
   function getModels(self){
-    var selectModel = $('<ul class="filter-models-select"></ul>');
+    var selectModel = $('<div class="filter-models-select" data-value="">Select Model</div>');
+    var selectModelOptions = $('<ul class="filter-models-options"></ul>');
     if (self.$models) {
-      selectModel
-        .append($('<li disabled selected>Select Model</li>'));
       self.$models.forEach(function(value) {
-        selectModel
+        selectModelOptions
           .append($('<li value="' + value + '">' + value + '</li>'));
       });
     } else {
-      selectModel
+      selectModelOptions
         .append($('<li disabled selected>No Models defined.</li>'));
     }
+    selectModel.append(selectModelOptions);
+
     return selectModel;
   }
 
   function getModelsInput(self){
     var textInput = $('<input type="text" />');
-    var selectModel = $('<ul class="filter-models-select"></ul>');
+    var selectModel = $('<ul class="filter-models-options"></ul>');
     if (self.$models) {
       self.$models.forEach(function(value) {
         var option = $('<li data-value="' + value + '">' + value + '</li>');
@@ -259,17 +260,17 @@
       self.clearAll();
     });
 
-    selectModel1.change(function() {
-      var idx = $(this).prop('selectedIndex');
-      selectModel2.find('option').each(function () {
-        $(this).prop('disabled', false);
-      });
-      selectModel2.prop("selectedIndex", idx);
-    });
-    selectModel2.change(function() {
-      self.$selectedModel = $(this).val();
-      $(this).parent().trigger('updaterules:options');
-    });
+    // selectModel1.change(function() {
+    //   var idx = $(this).prop('selectedIndex');
+    //   selectModel2.find('option').each(function () {
+    //     $(this).prop('disabled', false);
+    //   });
+    //   selectModel2.prop("selectedIndex", idx);
+    // });
+    // selectModel2.change(function() {
+    //   self.$selectedModel = $(this).val();
+    //   $(this).parent().trigger('updaterules:options');
+    // });
 
     self.$selectModels.append(removeButton).append(selectModel1).append(rule).append(selectModel2);
     self.$container.append(self.$selectModels);
