@@ -202,18 +202,29 @@
   }
 
   function getModels(self){
-    var selectModel = $('<div class="filter-models-select" data-value="">Select Model</div>');
+    var selectModel = $('<div class="filter-models-wrapper"></div>');
+    var selectModelHeader = $('<div class="filter-models-select" data-value="">Select Model</div>');
     var selectModelOptions = $('<ul class="filter-models-options"></ul>');
     if (self.$models) {
       self.$models.forEach(function(value) {
-        selectModelOptions
-          .append($('<li value="' + value + '">' + value + '</li>'));
+        var option = $('<li data-value="' + value + '">' + value + '</li>');
+        selectModelOptions.append(option);
+        option.click(function () {
+          var val = $(this).data('value');
+          selectModelHeader.data('value', val).html(val);
+          selectModelOptions.hide();
+        });
       });
     } else {
       selectModelOptions
         .append($('<li disabled selected>No Models defined.</li>'));
     }
-    selectModel.append(selectModelOptions);
+
+    selectModel.append(selectModelHeader).append(selectModelOptions.hide());
+
+    selectModelHeader.click(function (){
+      selectModelOptions.show();
+    });
 
     return selectModel;
   }
@@ -225,15 +236,14 @@
       self.$models.forEach(function(value) {
         var option = $('<li data-value="' + value + '">' + value + '</li>');
         selectModel.append(option);
-        option.click(function () {
+        option.mousedown(function () {
           textInput.val(option.data('value'));
-          selectModel.hide();
         });
       });
     } else {
       var option = $('<li data-value="">No Models defined.</li>');
       selectModel.append(option);
-      option.click(function () {
+      option.mousedown(function () {
           textInput.val(option.data('value'));
           selectModel.hide();
         });
@@ -243,6 +253,10 @@
 
     textInput.focus(function () {
       selectModel.show();
+    });
+
+    textInput.blur(function () {
+      selectModel.hide();
     });
 
 
