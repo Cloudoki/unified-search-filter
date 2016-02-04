@@ -1,4 +1,4 @@
-(function($) {
+(function ($) {
   'use strict';
 
   var defaultOptions = {};
@@ -201,33 +201,38 @@
     return self.$globalGroup.html(select).append(self.$globalGroupContainer).append(removeButton);
   }
 
+  function getModels(self){
+    var selectModel = $('<ul class="filter-models-select"></ul>');
+    if (self.$models) {
+      self.$models.forEach(function(value) {
+        selectModel
+          .append($('<li value="' + value + '">' + value + '</li>'));
+      });
+    } else {
+      selectModel
+        .append($('<li disabled selected>No Models defined.</li>'));
+    }
+    return selectModel;
+  }
+
   function getModelsAsOptions(self) {
     self.$selectModels.html('');
-    var textAndModel = $('<div></div>');
+    var textAndModel = $('<div class="filter-input-select"></div>');
     var textInput = $('<input type="text" />');
-    var selectModel1 = $('<select class="filter-models-select"></select>');
-    var selectModel2 = $('<select class="filter-models-select"></select>');
+    var selectModel1 = getModels(self);
+    var selectModel2 = getModels(self);
     var rule = $('<select class="filter-model-rule"><option value="IN">IN</option><option value="NOTIN">NOT IN</option></select>');
     var removeButton = $('<span class="btn remove"><i class="fa fa-minus"></i></span>').on('click', function() {
       self.clearAll();
     });
-    if (self.$models) {
-      selectModel1
-        .append($('<option disabled selected>Select Model</option>'));
-      selectModel2
-        .append($('<option disabled selected>Select Model</option>'));
-      self.$models.forEach(function(value) {
-        selectModel1
-          .append($('<option value="' + value + '">' + value + '</option>'));
-        selectModel2
-          .append($('<option value="' + value + '">' + value + '</option>'));
+
+    selectModel1.change(function() {
+      var idx = $(this).prop('selectedIndex');
+      selectModel2.find('option').each(function () {
+        $(this).prop('disabled', false);
       });
-    } else {
-      selectModel1
-        .append($('<option disabled selected>No Models defined.</option>'));
-      selectModel2
-        .append($('<option disabled selected>No Models defined.</option>'));
-    }
+      selectModel2.prop("selectedIndex", idx);
+    });
     selectModel2.change(function() {
       self.$selectedModel = $(this).val();
       $(this).parent().trigger('updaterules:options');
