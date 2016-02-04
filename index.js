@@ -204,6 +204,8 @@
   function getModels(self){
     var selectModel = $('<ul class="filter-models-select"></ul>');
     if (self.$models) {
+      selectModel
+        .append($('<li disabled selected>Select Model</li>'));
       self.$models.forEach(function(value) {
         selectModel
           .append($('<li value="' + value + '">' + value + '</li>'));
@@ -215,13 +217,44 @@
     return selectModel;
   }
 
+  function getModelsInput(self){
+    var textInput = $('<input type="text" />');
+    var selectModel = $('<ul class="filter-models-select"></ul>');
+    if (self.$models) {
+      self.$models.forEach(function(value) {
+        var option = $('<li data-value="' + value + '">' + value + '</li>');
+        selectModel.append(option);
+        option.click(function () {
+          textInput.val(option.data('value'));
+          selectModel.hide();
+        });
+      });
+    } else {
+      var option = $('<li data-value="">No Models defined.</li>');
+      selectModel.append(option);
+      option.click(function () {
+          textInput.val(option.data('value'));
+          selectModel.hide();
+        });
+    }
+
+    selectModel.hide();
+
+    textInput.focus(function () {
+      selectModel.show();
+    });
+
+
+    var textAndModel = $('<div class="filter-input-select"></div>');
+    textAndModel.append(textInput).append(selectModel);
+    return textAndModel;
+  }
+
   function getModelsAsOptions(self) {
     self.$selectModels.html('');
-    var textAndModel = $('<div class="filter-input-select"></div>');
-    var textInput = $('<input type="text" />');
-    var selectModel1 = getModels(self);
+    var selectModel1 = getModelsInput(self);
     var selectModel2 = getModels(self);
-    var rule = $('<select class="filter-model-rule"><option value="IN">IN</option><option value="NOTIN">NOT IN</option></select>');
+    var rule = $('<select class="filter-model-rule"><option value="in">in</option><option value="notin">not in</option></select>');
     var removeButton = $('<span class="btn remove"><i class="fa fa-minus"></i></span>').on('click', function() {
       self.clearAll();
     });
@@ -238,8 +271,7 @@
       $(this).parent().trigger('updaterules:options');
     });
 
-    textAndModel.append(textInput).append(selectModel1);
-    self.$selectModels.append(removeButton).append(textAndModel).append(rule).append(selectModel2);
+    self.$selectModels.append(removeButton).append(selectModel1).append(rule).append(selectModel2);
     self.$container.append(self.$selectModels);
   }
 
