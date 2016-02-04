@@ -1,9 +1,12 @@
+body {
+	background-color:#F1F1F1;
+}
 .container-fluid{
-	min-width: 610px;
+	min-width: 500px;
 	width: fit-content; 
 	position: relative;
 	float: left;
-	max-width: 900px;
+	max-width: 700px;
 	border:none;
 	border-radius:5px;
 	display: inline-block;
@@ -17,18 +20,23 @@
 	background-color: -moz-field;
 	font: -moz-field;
 	font: -webkit-small-control;
-	padding: 3px 3px;
-	width: 100%;
 	font-size: 1em;
 	min-height: 1em;
 	overflow-y: hidden;
+	width: fit-content; 
+	background-color: #415057;
+	padding: 10px 30px 10px 10px;
+	height: 25px;
+	white-space: nowrap;
+	border:none;
+	border-radius:5px;
 }
 
 .filter-addButton {
 	font-size: 12px;
 	transition: all linear 0.15s;
 	position: absolute;
-	right: 0px;
+	right: 5px;
 	top: 11px;
 	border-radius: 3px;
 	background-color: #d1cfcf;
@@ -42,22 +50,6 @@
 	font-color:#273238;
 }
 
-.filter-single-line {
-	min-width: 100%;
-	width: fit-content; 
-	background-color: #415057;
-	padding: 10px 0px 10px 10px;
-	height: 25px;
-	white-space: nowrap;
-	overflow-x:auto;
-	border:none;
-	border-radius:5px;
-}
-
-
-.filter-single-line:hover {
-	
-}
 
 .filter-single-line br {
 	display: none;
@@ -150,23 +142,50 @@
 	background-color: #72848D;
 	margin-left: 7px;
 	color:#f1f1f1;
-	 -webkit-appearance: none;
+	position:relative;
 }
 
-
-.filter-models-select  > option {
+.filter-models-options {
+	position:absolute;
 	background-color: #fff;
-	color:black;
+	margin: 0;
+	padding: 0px;
+	box-shadow: 2px 2px 20px -3px #888888;
+	left: 0px;
 }
 
+.filter-models-options:before {
+	position: absolute;
+	top: -24px;
+	width: 0px;
+	margin: 0 auto;
+	left: 0;
+	right: 0;
+	content:"";
+	border-color:transparent transparent #fff transparent;
+	border-style:solid;
+	border-width:12px 12px 12px 12px;
+}
+ 
+.filter-models-options li {
+	background-color: #fff;
+	color:#273238;
+	display:block;
+	padding: 20px 30px 10px 15px;
+	text-align: left;
+}
+
+.filter-models-options li:hover {
+	background-color:#E8E8E8;
+	display:block;
+}
 
 
 .filter-global-group {
-
 	line-height: 1;
 	border: 0;
 	margin-right: 30px;
-	margin-left: -60px;
+	margin-left: 10px;
 }
 
 .filter-global-group select{
@@ -273,4 +292,3 @@ input[type="text"]{
 	background-color:#afc930;
 	color:#f1f1f1;
 }
-
