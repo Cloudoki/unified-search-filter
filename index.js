@@ -91,7 +91,7 @@
     self.hasGlobal = false;
 
     this.$plus = $(options.dropdownShowIcon || '<i class="fa fa-plus"></i>');
-    this.$minus = $(options.dropdownHideIcon || '<i class="fa fa-minus"></i>');
+    // this.$minus = $(options.dropdownHideIcon || '<i class="fa fa-minus"></i>');
 
     this.$wrapper = $('<div class="filter-wrapper"></div>');
     this.$plusButton = $('<button class="filter-addButton"></button>');
@@ -202,18 +202,29 @@
   }
 
   function getModels(self){
-    var selectModel = $('<div class="filter-models-select" data-value="">Select Model</div>');
+    var selectModel = $('<div class="filter-models-wrapper"></div>');
+    var selectModelHeader = $('<div class="filter-models-select" data-value="">Select Model</div>');
     var selectModelOptions = $('<ul class="filter-models-options"></ul>');
     if (self.$models) {
       self.$models.forEach(function(value) {
-        selectModelOptions
-          .append($('<li value="' + value + '">' + value + '</li>'));
+        var option = $('<li data-value="' + value + '">' + value + '</li>');
+        selectModelOptions.append(option);
+        option.click(function () {
+          var val = $(this).data('value');
+          selectModelHeader.data('value', val).html(val);
+          selectModelOptions.hide();
+        });
       });
     } else {
       selectModelOptions
         .append($('<li disabled selected>No Models defined.</li>'));
     }
-    selectModel.append(selectModelOptions);
+
+    selectModel.append(selectModelHeader).append(selectModelOptions.hide());
+
+    selectModelHeader.click(function (){
+      selectModelOptions.show();
+    });
 
     return selectModel;
   }
@@ -225,15 +236,14 @@
       self.$models.forEach(function(value) {
         var option = $('<li data-value="' + value + '">' + value + '</li>');
         selectModel.append(option);
-        option.click(function () {
+        option.mousedown(function () {
           textInput.val(option.data('value'));
-          selectModel.hide();
         });
       });
     } else {
       var option = $('<li data-value="">No Models defined.</li>');
       selectModel.append(option);
-      option.click(function () {
+      option.mousedown(function () {
           textInput.val(option.data('value'));
           selectModel.hide();
         });
@@ -245,6 +255,10 @@
       selectModel.show();
     });
 
+    textInput.blur(function () {
+      selectModel.hide();
+    });
+
 
     var textAndModel = $('<div class="filter-input-select"></div>');
     textAndModel.append(textInput).append(selectModel);
@@ -252,12 +266,16 @@
   }
 
   function getModelsAsOptions(self) {
-    self.$selectModels.html('');
+    // self.$selectModels.html('');
+    var modelsContainer = $('<div class="filter-models-query-container"></div>');
+    var removeButton = $('<span class="btn remove" title="Remove query"><i class="fa fa-minus"></i></span>').on('click', function() {
+      modelsContainer.remove();
+    });
     var selectModel1 = getModelsInput(self);
     var selectModel2 = getModels(self);
     var rule = $('<select class="filter-model-rule"><option value="in">in</option><option value="notin">not in</option></select>');
-    var removeButton = $('<span class="btn remove"><i class="fa fa-minus"></i></span>').on('click', function() {
-      self.clearAll();
+    var addButton = $('<span class="btn add" title="Add conditions"><i class="fa fa-plus"></i></span>').on('click', function() {
+      self.addGroup('AND');
     });
 
     // selectModel1.change(function() {
@@ -272,7 +290,9 @@
     //   $(this).parent().trigger('updaterules:options');
     // });
 
-    self.$selectModels.append(removeButton).append(selectModel1).append(rule).append(selectModel2);
+    modelsContainer.append(removeButton).append(selectModel1)
+      .append(rule).append(selectModel2).append(addButton);
+    self.$selectModels.append(modelsContainer)
     self.$container.append(self.$selectModels);
   }
 
@@ -336,15 +356,15 @@
 
     init: function() {
       var self = this;
-      $(document).unbind('mousedown').mousedown(function(event) {
-        if (!$(event.target).closest('.filter-dropdown').length) {
-          if ($('.filter-addButton').hasClass('active')) {
-            $('.filter-addButton').removeClass('active');
-            $('.filter-addButton').html(self.$plus);
-            $('.filter-dropdown').slideUp(100).removeClass('open');
-          }
-        }
-      });
+      // $(document).unbind('mousedown').mousedown(function(event) {
+      //   if (!$(event.target).closest('.filter-dropdown').length) {
+      //     if ($('.filter-addButton').hasClass('active')) {
+      //       $('.filter-addButton').removeClass('active');
+      //       $('.filter-addButton').html(self.$plus);
+      //       $('.filter-dropdown').slideUp(100).removeClass('open');
+      //     }
+      //   }
+      // });
 
       this.closeAccordion = function() {
         self.$plusButton.removeClass('active');
@@ -364,20 +384,36 @@
       };
 
       this.$plusButton.on('click', function(e) {
-        if (self.state !== 'init') {
-          if ($(this).hasClass('active')) {
-            self.closeAccordion();
-            $(this).html(self.$plus)
-          } else {
-            self.closeAccordion();
-            $(this).html(self.$minus)
-            self.openAccordion();
-          }
-        }
+        getModelsAsOptions(self);
+        // if (self.state !== 'init') {
+        //   if ($(this).hasClass('active')) {
+        //     self.closeAccordion();
+        //     $(this).html(self.$plus)
+        //   } else {
+        //     self.closeAccordion();
+        //     $(this).html(self.$minus)
+        //     self.openAccordion();
+        //   }
+        // }
 
-        states(self)[self.state]();
+        // states(self)[self.state]();
 
         e.preventDefault();
+      });
+
+      $(document).tooltip({
+        position: {
+          my: "center bottom-20",
+          at: "center top",
+          using: function( position, feedback ) {
+            $( this ).css( position );
+            $( "<div>" )
+              .addClass( "arrow" )
+              .addClass( feedback.vertical )
+              .addClass( feedback.horizontal )
+              .appendTo( this );
+          }
+        }
       });
     },
 
