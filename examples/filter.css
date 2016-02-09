@@ -146,6 +146,7 @@ body {
 }
 
 .filter-models-options {
+	display: none;
 	position:absolute;
 	background-color: #fff;
 	margin: 0;
@@ -153,6 +154,35 @@ body {
 	box-shadow: 2px 2px 20px -3px #888888;
 	left: 0px;
 }
+
+.ui-menu {
+	background-color: #fff!important;
+	margin: 0!!important;
+	padding: 0px!!important;
+	box-shadow: 2px 2px 20px -3px #888888!!important;
+	left: 0px;
+	border: none!important;
+	top:50px!important;
+}
+.ui-menu-item {
+	background: #fff!important;
+	color:#273238!!important;
+	padding: 20px 30px 10px 15px!important;
+	text-align: left!important;
+	font-weight: 100!important;
+	font-size: 0.8em!important;
+	border: none!important;
+
+}
+.ui-menu-item:hover{
+	background:#E8E8E8!important;
+	border: none!important;
+}
+
+.ui-state-focus{
+	margin: 0px!important;
+}
+
 
 .filter-models-options:before {
 	position: absolute;
