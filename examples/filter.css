@@ -3,7 +3,7 @@ body {
 }
 .container-fluid{
 	min-width: 500px;
-	width: fit-content; 
+	width: fit-content;
 	position: relative;
 	float: left;
 	max-width: 700px;
@@ -23,7 +23,7 @@ body {
 	font-size: 1em;
 	min-height: 1em;
 	overflow-y: hidden;
-	width: fit-content; 
+	width: fit-content;
 	background-color: #415057;
 	padding: 10px 30px 10px 10px;
 	height: 25px;
@@ -166,7 +166,7 @@ body {
 	border-style:solid;
 	border-width:12px 12px 12px 12px;
 }
- 
+
 .filter-models-options li {
 	background-color: #fff;
 	color:#273238;
@@ -190,7 +190,7 @@ body {
 
 .filter-global-group select{
 	background-color: #A3B93A;
-	color:#f1f1f1;  
+	color:#f1f1f1;
 	border-radius: 5px;
 	border: none;
 	padding: 4px 0px 4px 3px;
@@ -282,7 +282,7 @@ input[type="text"]{
 
 .filter-model-rule{
 	background-color: #A3B93A;
-	color:#f1f1f1;  
+	color:#f1f1f1;
 	margin-left: 7px;
 	border-radius: 5px;
 	border: none;
@@ -291,4 +291,48 @@ input[type="text"]{
 .filter-model-rule option{
 	background-color:#afc930;
 	color:#f1f1f1;
+}
+
+.ui-tooltip, .arrow:after {
+    background: white;
+    border: 2px solid white;
+}
+.ui-tooltip {
+    padding: 10px 20px;
+    color: black;
+    border-radius: 20px;
+    font: 0.6em "Helvetica Neue", Sans-Serif;
+    text-transform: uppercase;
+}
+.arrow {
+    width: 70px;
+    height: 16px;
+    overflow: hidden;
+    position: absolute;
+    left: 50%;
+    margin-left: -35px;
+    bottom: -16px;
+}
+.arrow.top {
+    top: -16px;
+    bottom: auto;
+}
+.arrow.left {
+    left: 20%;
+}
+.arrow:after {
+    content: "";
+    position: absolute;
+    left: 20px;
+    top: -20px;
+    width: 25px;
+    height: 25px;
+    box-shadow: 6px 5px 9px -9px black;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+.arrow.top:after {
+    bottom: -20px;
+    top: auto;
 }

@@ -91,7 +91,7 @@
     self.hasGlobal = false;
 
     this.$plus = $(options.dropdownShowIcon || '<i class="fa fa-plus"></i>');
-    this.$minus = $(options.dropdownHideIcon || '<i class="fa fa-minus"></i>');
+    // this.$minus = $(options.dropdownHideIcon || '<i class="fa fa-minus"></i>');
 
     this.$wrapper = $('<div class="filter-wrapper"></div>');
     this.$plusButton = $('<button class="filter-addButton"></button>');
@@ -266,12 +266,16 @@
   }
 
   function getModelsAsOptions(self) {
-    self.$selectModels.html('');
+    // self.$selectModels.html('');
+    var modelsContainer = $('<div class="filter-models-query-container"></div>');
+    var removeButton = $('<span class="btn remove" title="Remove query"><i class="fa fa-minus"></i></span>').on('click', function() {
+      modelsContainer.remove();
+    });
     var selectModel1 = getModelsInput(self);
     var selectModel2 = getModels(self);
     var rule = $('<select class="filter-model-rule"><option value="in">in</option><option value="notin">not in</option></select>');
-    var removeButton = $('<span class="btn remove"><i class="fa fa-minus"></i></span>').on('click', function() {
-      self.clearAll();
+    var addButton = $('<span class="btn add" title="Add conditions"><i class="fa fa-plus"></i></span>').on('click', function() {
+      self.addGroup('AND');
     });
 
     // selectModel1.change(function() {
@@ -286,7 +290,9 @@
     //   $(this).parent().trigger('updaterules:options');
     // });
 
-    self.$selectModels.append(removeButton).append(selectModel1).append(rule).append(selectModel2);
+    modelsContainer.append(removeButton).append(selectModel1)
+      .append(rule).append(selectModel2).append(addButton);
+    self.$selectModels.append(modelsContainer)
     self.$container.append(self.$selectModels);
   }
 
@@ -350,15 +356,15 @@
 
     init: function() {
       var self = this;
-      $(document).unbind('mousedown').mousedown(function(event) {
-        if (!$(event.target).closest('.filter-dropdown').length) {
-          if ($('.filter-addButton').hasClass('active')) {
-            $('.filter-addButton').removeClass('active');
-            $('.filter-addButton').html(self.$plus);
-            $('.filter-dropdown').slideUp(100).removeClass('open');
-          }
-        }
-      });
+      // $(document).unbind('mousedown').mousedown(function(event) {
+      //   if (!$(event.target).closest('.filter-dropdown').length) {
+      //     if ($('.filter-addButton').hasClass('active')) {
+      //       $('.filter-addButton').removeClass('active');
+      //       $('.filter-addButton').html(self.$plus);
+      //       $('.filter-dropdown').slideUp(100).removeClass('open');
+      //     }
+      //   }
+      // });
 
       this.closeAccordion = function() {
         self.$plusButton.removeClass('active');
@@ -378,20 +384,36 @@
       };
 
       this.$plusButton.on('click', function(e) {
-        if (self.state !== 'init') {
-          if ($(this).hasClass('active')) {
-            self.closeAccordion();
-            $(this).html(self.$plus)
-          } else {
-            self.closeAccordion();
-            $(this).html(self.$minus)
-            self.openAccordion();
-          }
-        }
+        getModelsAsOptions(self);
+        // if (self.state !== 'init') {
+        //   if ($(this).hasClass('active')) {
+        //     self.closeAccordion();
+        //     $(this).html(self.$plus)
+        //   } else {
+        //     self.closeAccordion();
+        //     $(this).html(self.$minus)
+        //     self.openAccordion();
+        //   }
+        // }
 
-        states(self)[self.state]();
+        // states(self)[self.state]();
 
         e.preventDefault();
+      });
+
+      $(document).tooltip({
+        position: {
+          my: "center bottom-20",
+          at: "center top",
+          using: function( position, feedback ) {
+            $( this ).css( position );
+            $( "<div>" )
+              .addClass( "arrow" )
+              .addClass( feedback.vertical )
+              .addClass( feedback.horizontal )
+              .appendTo( this );
+          }
+        }
       });
     },
 
