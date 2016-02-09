@@ -94,7 +94,7 @@
     // this.$minus = $(options.dropdownHideIcon || '<i class="fa fa-minus"></i>');
 
     this.$wrapper = $('<div class="filter-wrapper"></div>');
-    this.$plusButton = $('<button class="filter-addButton"></button>');
+    this.$plusButton = $('<button class="filter-addButton" title="Add query"></button>');
 
     // TODO: future feature add contenteditable to filter so it can be
     // delete using keyboard
@@ -249,10 +249,14 @@
         });
     }
 
-    selectModel.hide();
+    selectModel.menu().hide();
 
     textInput.focus(function () {
-      selectModel.show();
+      selectModel.show().position({
+          my: "right top",
+          at: "right bottom",
+          of: this
+        });
     });
 
     textInput.blur(function () {
@@ -266,10 +270,14 @@
   }
 
   function getModelsAsOptions(self) {
-    // self.$selectModels.html('');
     var modelsContainer = $('<div class="filter-models-query-container"></div>');
+    var state = 'clickedOnce';
+    if(self.state === 'init') {
+      state = 'init';
+    }
     var removeButton = $('<span class="btn remove" title="Remove query"><i class="fa fa-minus"></i></span>').on('click', function() {
       modelsContainer.remove();
+      self.state = state;
     });
     var selectModel1 = getModelsInput(self);
     var selectModel2 = getModels(self);
@@ -277,6 +285,8 @@
     var addButton = $('<span class="btn add" title="Add conditions"><i class="fa fa-plus"></i></span>').on('click', function() {
       self.addGroup('AND');
     });
+
+    var selectANDOR = $('<select class="filter-model-rule"><option value="AND">AND</option><option value="OR">OR</option></select>');
 
     // selectModel1.change(function() {
     //   var idx = $(this).prop('selectedIndex');
@@ -289,6 +299,9 @@
     //   self.$selectedModel = $(this).val();
     //   $(this).parent().trigger('updaterules:options');
     // });
+    if(self.state !== 'init') {
+      modelsContainer.append(selectANDOR);
+    }
 
     modelsContainer.append(removeButton).append(selectModel1)
       .append(rule).append(selectModel2).append(addButton);
@@ -385,6 +398,7 @@
 
       this.$plusButton.on('click', function(e) {
         getModelsAsOptions(self);
+        self.state = 'clickedOnce';
         // if (self.state !== 'init') {
         //   if ($(this).hasClass('active')) {
         //     self.closeAccordion();
