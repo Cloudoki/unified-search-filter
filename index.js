@@ -381,8 +381,8 @@
   function addGroup(self, parent) {
     var group = $('<div class="filter-group"></div>');
     var groupContainer = $('<div class="filter-group-container"></div>');
-    var leftParentheses = $('<span>(</span>');
-    var rightParentheses = $('<span>)</span>');
+    var leftParentheses = $('<span class="parentheses">(</span>');
+    var rightParentheses = $('<span class="parentheses">)</span>');
     var removeButton = $(' <span class="btn remove" title="Remove group">―</span>');
     var addButton = $('<span class="btn add" title="Add rule">+</span>');
     var select = $('<select name="group"></select>');
@@ -414,8 +414,8 @@
     var globalGroup = $('<div class="filter-global-group"></div>');
     var removeButton = $(' <span class="btn remove" title="Remove Global Group">―</span>');
     var select = $('<select name="group"></select>');
-    var leftParentheses = $('<span>(</span>');
-    var rightParentheses = $('<span>)</span>');
+    var leftParentheses = $('<span class="parentheses">(</span>');
+    var rightParentheses = $('<span class="parentheses">)</span>');
 
     removeButton.on('click', function () {
       $(this).parent().remove();
