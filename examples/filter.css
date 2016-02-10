@@ -77,28 +77,12 @@ body {
 	background-color: #72848D;
 }
 
-.filter-dropdown {
-	padding: 15px;
-	width: 200px;
-	border: 1px solid #AFAFAF;
-	border-radius: 3px;
-	display: none;
-	position: absolute;
-}
-
 .filter-models-query-container {
     margin-right: 10px;
 }
 
 .filter-models{
 	float: left;
-}
-
-.filter-models-after::after {
-	content: "WHERE";
-	font-weight: 800;
-	color: #314047;
-	padding: 2px;
 }
 
 .filter-models-select {
@@ -125,7 +109,6 @@ body {
 }
 
 .filter-models-options {
-	display: none;
 	position:absolute;
 	background-color: #fff;
 	margin: 0;
@@ -355,4 +338,16 @@ body {
     color:#f1f1f1;
     border:none;
     border-bottom: 2px solid rgba(110, 219, 0, 1) !important;
+}
+
+.parentheses{
+	color: #fff;
+	font-size: 1.2em;
+	margin-left: 2px;
+	margin-right: 2px;
+	font-weight: 400;
+}
+
+.filter-group select[name="group"]{
+	margin-left: 7px;
 }
