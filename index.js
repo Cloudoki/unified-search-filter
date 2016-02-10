@@ -7,6 +7,18 @@
    */
   var defaultOptions = {
     plus: '<span>+</span>',
+    minus: '<span>―</span>',
+    endpoint: '/search',
+    success: function (data) {
+      /* eslint-disable no-console */
+      console.log(data);
+      /* eslint-enable no-console */
+    },
+    error: function (errMsg) {
+      /* eslint-disable no-console */
+      console.error(errMsg);
+      /* eslint-enable no-console */
+    },
   };
   /**
    * Map of html characters to be escaped and corresponding ascii code
@@ -147,6 +159,9 @@
 
     this.$plus = $(options.plus || defaultOptions.plus);
 
+    defaultOptions.plus = options.plus || defaultOptions.plus;
+    defaultOptions.minus = options.minus || defaultOptions.minus;
+
     this.$wrapper = $('<div class="filter-wrapper"></div>');
     this.$plusButton = $('<button class="filter-addButton" title="Add query"></button>');
 
@@ -168,7 +183,9 @@
 
     this.$plusButton.html(this.$plus);
 
-    this.$query = {};
+    this.$query = {
+      queries: []
+    };
 
     this.init();
   }
@@ -176,9 +193,10 @@
   /**
    * Get the models as a selectable menu with each model as an option
    * @param  {Object} self       the object containing the plugin
+   * @param {HTML elemnt} parent the main parent container of the query
    * @return {HTML element}      element with the options
    */
-  function getModelsAsOptions(self) {
+  function getModelsAsOptions(self, parent) {
     var selectModel = $('<div class="filter-models-wrapper"></div>');
     var selectModelHeader = $('<div class="filter-models-select" data-value="">Select Model</div>');
     var selectModelOptions = $('<ul class="filter-models-options"></ul>');
@@ -217,15 +235,22 @@
       return false;
     });
 
+    selectModelHeader.change(function () {
+      /* eslint-disable no-param-reassign */
+      parent.data('dataquery').where = selectModelHeader.data('value');
+      /* eslint-enable no-param-reassign */
+    });
+
     return selectModel;
   }
 
   /**
    * Get the input for user search and the models as a selectable menu with each model as an option
    * @param  {Object} self       the object containing the plugin
+   * @param {HTML elemnt} parent the main parent container of the query
    * @return {HTML element}      element with the input and options
    */
-  function getModelsInput(self) {
+  function getModelsInput(self, parent) {
     var textInput = $('<input type="text" />');
     var selectModel = $('<ul class="filter-models-options"></ul>');
     var textAndModel = $('<div class="filter-input-select"></div>');
@@ -256,6 +281,12 @@
     }
 
     selectModel.menu().hide();
+
+    textInput.change(function () {
+      /* eslint-disable no-param-reassign */
+      parent.data('dataquery').search = textInput.val();
+      /* eslint-enable no-param-reassign */
+    });
 
     textInput.focus(function () {
       selectModel.show().position({
@@ -320,19 +351,30 @@
 
   /**
    * Creates a rule condition to add to a group
-   * @param {object} self        the object containing the plugin
-   * @param {HTML elemnt} parent the main parent container of the query
-   * @return {HTML element}      the created element
+   * @param {object} self         the object containing the plugin
+   * @param {HTML element} parent the main parent container of the query
+   * @param {object} groups       The object where to put the query rules
+   * @return {HTML element}       the created element
    */
-  function addRule(self, parent) {
+  function addRule(self, parent, groups) {
     var ruleOptionsContainer = $('<div class="filter-rule-dropdown"></div>');
     var input = $('<input type="text"></input>');
     var condition = $('<select></select>');
     var where = $('<select></select>');
-    var removeButton = $(' <span class="btn remove" title="Remove Rule">―</span>');
+    var removeButton = $(' <span class="btn remove" title="Remove Rule">' +
+      defaultOptions.minus + '</span>');
 
     var value = $(parent).find('.filter-models-wrapper')
       .find('.filter-models-select').data('value');
+
+    var rule = {
+      field: '',
+      operator: '',
+      type: '',
+      value: ''
+    };
+
+    groups.rules.push(rule);
 
     getRuleCondition(condition);
     getOptionsFromModel(self, where, value);
@@ -346,6 +388,8 @@
       /* eslint-disable vars-on-top */
       var type = where.find(':selected').data('validation');
       /* eslint-enable vars-on-top */
+      rule.field = where.val();
+      rule.type = type;
       getRuleCondition(condition, type);
       if (type === 'date') {
         input.datepicker();
@@ -355,6 +399,7 @@
     });
     removeButton.on('click', function () {
       $(this).parent().remove();
+      groups.splice(groups.indexOf(rule), 1);
       return false;
     });
     input.change(function () {
@@ -363,8 +408,13 @@
       if (!validation[where.find(':selected').data('validation')](content)) {
         el.removeClass('valid').addClass('invalid');
       } else {
+        rule.value = content;
         el.removeClass('invalid').addClass('valid');
       }
+    });
+    rule.operator = condition.val();
+    condition.change(function () {
+      rule.operator = condition.val();
     });
     ruleOptionsContainer.append(where).append(condition).append(input);
     ruleOptionsContainer
@@ -375,7 +425,7 @@
   /**
    * Creates a group to add rules to
    * @param {object} self        the object containing the plugin
-   * @param {HTML elemnt} parent the main parent container of the query
+   * @param {HTML element} parent the main parent container of the query
    * @return {HTML element}      the created element
    */
   function addGroup(self, parent) {
@@ -383,21 +433,36 @@
     var groupContainer = $('<div class="filter-group-container"></div>');
     var leftParentheses = $('<span class="parentheses">(</span>');
     var rightParentheses = $('<span class="parentheses">)</span>');
-    var removeButton = $(' <span class="btn remove" title="Remove group">―</span>');
-    var addButton = $('<span class="btn add" title="Add rule">+</span>');
+    var removeButton = $(' <span class="btn remove" title="Remove group">' +
+      defaultOptions.minus + '</span>');
+    var addButton = $('<span class="btn add" title="Add rule">' + defaultOptions.plus + '</span>');
     var select = $('<select name="group"></select>');
+
+    var groups = {
+      condition: 'AND',
+      rules: []
+    };
+    var index;
 
     removeButton.on('click', function () {
       $(this).parent().remove();
+      index = parent.data('dataquery').global.groups.indexOf(groups);
+      parent.data('dataquery').global.groups.splice(index, 1);
       return false;
     });
     addButton.on('click', function () {
-      groupContainer.append(addRule(self, parent));
+      groupContainer.append(addRule(self, parent, groups));
       return false;
     });
 
     select.append($('<option value="AND" selected<>AND</option>'));
     select.append($('<option value="OR">OR</option>'));
+
+    parent.data('dataquery').global.groups.push(groups);
+
+    select.change(function () {
+      groups.condition = select.val();
+    });
 
     return group.append(select).append(leftParentheses)
       .append(groupContainer).append(addButton)
@@ -412,17 +477,27 @@
    */
   function addGlobalGroup(self, parent) {
     var globalGroup = $('<div class="filter-global-group"></div>');
-    var removeButton = $(' <span class="btn remove" title="Remove Global Group">―</span>');
+    var removeButton = $(' <span class="btn remove" title="Remove Global Group">' +
+      defaultOptions.minus + '</span>');
     var select = $('<select name="group"></select>');
     var leftParentheses = $('<span class="parentheses">(</span>');
     var rightParentheses = $('<span class="parentheses">)</span>');
 
     removeButton.on('click', function () {
       $(this).parent().remove();
+      /* eslint-disable no-param-reassign */
+      delete parent.data('dataquery').global;
+      /* eslint-enable no-param-reassign */
       return false;
     });
     select.append($('<option value="AND" selected>AND</option>'));
     select.append($('<option value="OR">OR</option>'));
+
+    select.change(function () {
+      /* eslint-disable no-param-reassign */
+      parent.data('dataquery').global.condition = select.val();
+      /* eslint-enable no-param-reassign */
+    });
 
     globalGroup.on('add:group', function () {
       addGroup(self, parent).insertBefore(rightParentheses, globalGroup);
@@ -437,6 +512,15 @@
    * @param {object} self        the object containing the plugin
    */
   function getMainQuery(self) {
+    var dataquery = {
+      search: '',
+      condition: 'in',
+      where: '',
+      global: {
+        condition: 'AND',
+        groups: []
+      }
+    };
     var modelsContainer = $('<div class="filter-models-query-container"></div>');
     var selectANDOR = $('<select class="filter-model-rule"><option value="AND">AND' +
       '</option><option value="OR">OR</option></select>');
@@ -445,19 +529,25 @@
     if (self.state === 'init') {
       state = 'init';
     }
+    self.$query.queries.push(dataquery);
+    modelsContainer.data('dataquery', dataquery);
     /* eslint-disable vars-on-top */
-    var removeButton = $('<span class="btn remove" title="Remove query">―</span>')
+    var removeButton = $('<span class="btn remove" title="Remove query">' +
+      defaultOptions.minus + '</span>')
       .on('click', function () {
         modelsContainer.remove();
         /* eslint-disable no-param-reassign */
         self.state = state;
         /* eslint-disable no param-reassign */
+        var index = self.$query.queries.indexOf(dataquery);
+        self.$query.queries.splice(index, 1);
       });
-    var selectModel1 = getModelsInput(self);
-    var selectModel2 = getModelsAsOptions(self);
+    var selectModel1 = getModelsInput(self, modelsContainer);
+    var selectModel2 = getModelsAsOptions(self, modelsContainer);
     var rule = $('<select class="filter-model-rule"><option value="in">in</option>' +
       '<option value="notin">not in</option></select>');
-    var addButton = $('<span class="btn add" title="Add group condition">+</span>');
+    var addButton = $('<span class="btn add" title="Add group condition">' +
+      defaultOptions.plus + '</span>');
 
     var globalGroup = addGlobalGroup(self, modelsContainer);
     /* eslint-enable vars-on-top */
@@ -498,6 +588,10 @@
       }
     });
 
+    rule.change(function () {
+      dataquery.condition = rule.val();
+    });
+
     if (self.state !== 'init') {
       modelsContainer.append(selectANDOR);
     }
@@ -511,8 +605,17 @@
   /**
    * Send the query to the server to do the search
    */
-  function sendQuery() {
-    // TODO
+  function sendQuery(self) {
+    var data = JSON.stringify(self.$query);
+    $.ajax({
+      type: 'POST',
+      url: self.options.endpoint || defaultOptions.endpoint,
+      data: data,
+      contentType: 'application/json; charset=utf-8',
+      dataType: 'json',
+      success: self.options.success || defaultOptions.success,
+      error: self.options.error || defaultOptions.error
+    });
   }
   /**
    * Extend the plugin to add more functions
@@ -546,6 +649,10 @@
               .appendTo(this);
           }
         }
+      });
+
+      $('[data-role="searchButton"]').click(function () {
+        sendQuery(self);
       });
     },
 

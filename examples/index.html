@@ -14,7 +14,8 @@
 
 <body>
     <input data-role="unifiedSearchFilter" value="input data" />
-
+    <br /s>
+    <button data-role="searchButton">search</button>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
@@ -43,10 +44,15 @@ $('[data-role="unifiedSearchFilter"]').unifiedSearchFilter({
             "birthday": "date",
         },
     },
-    /*
-    plus: '<i class="fa fa-caret-down"></i>',
-    minus: '<i class="fa fa-caret-up"></i>',
-    */
+    plus: '<i class="fa fa-plus"></i>',
+    minus: '<i class="fa fa-minus"></i>',
+    endpoint: '/search',
+    success: function (data) {
+        console.log(data);
+    },
+    error: function (errorMsg) {
+        console.log(errorMsg);
+    },
 });
 
 $('#destroy').on('click', function() {
