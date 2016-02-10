@@ -1,7 +1,29 @@
 (function ($) {
   'use strict';
 
-  var defaultOptions = {};
+  /**
+   * Default options to be used in the plugin
+   * @type {Object}
+   */
+  var defaultOptions = {
+    plus: '<span>+</span>',
+  };
+  /**
+   * Map of html characters to be escaped and corresponding ascii code
+   * @type {Object}
+   */
+  var entityMap = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    '\'': '&#39;',
+    '/': '&#x2F;'
+  };
+  /**
+   * The rules for the different types of data
+   * @type {Object}
+   */
   var rules = {
     text: {
       equal: 'equal',
@@ -31,33 +53,64 @@
       greater: 'greater',
       greater_or_equal: 'greater or equal',
     },
-    condition: {
-      in : 'in',
-      not_in: 'not in',
-    }
   };
+  /**
+   * Validate the different types of data
+   * @type {Object}
+   */
   var validation = {
-    text: function(text) {
+    /**
+     * Validates text
+     * @param  {string} text text to be tested
+     * @return {boolean}     returns true if it's a text
+     */
+    text: function (text) {
       var pattern = /\w\W*/gi;
       return pattern.test(text);
     },
-    number: function(number) {
+    /**
+     * Validates number
+     * @param  {string} number number to be tested
+     * @return {boolean}     returns true if it's a number
+     */
+    number: function (number) {
       var pattern = /^\d+$/g;
       return pattern.test(number);
     },
-    email: function(email) {
+    /**
+     * Validates email
+     * @param  {string} email email to be tested
+     * @return {boolean}     returns true if it's an email
+     */
+    email: function (email) {
+      /* eslint-disable max-len */
       var pattern = /^(([a-zA-Z]|[0-9])|([-]|[_]|[.]))+[@](([a-zA-Z0-9])|([-])){2,63}[.](([a-zA-Z0-9]){2,63})+$/gi;
+      /* eslint-enable max-len */
       return pattern.test(email);
     },
-    date: function(date) {
-      try {
-        console.log(new Date(date));
-        return true;
-      } catch (err) {
-        return false;
-      }
+    /**
+     * Validates date
+     * @param  {string} date date to be tested
+     * @return {boolean}     returns true if it's a date
+     */
+    date: function (date) {
+      /* eslint-disable max-len */
+      var pattern = /^(?:(?:(?:0?[13578]|1[02])(\/|-|\.)31)\1|(?:(?:0?[1,3-9]|1[0-2])(\/?|-|\.)(?:29|30)\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:(?:0?2)(\/?|-|\.)(?:29)\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:(?:0?[1-9])|(?:1[0-2]))(\/?|-|\.)(?:0?[1-9]|1\d|2[0-8])\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$/gm;
+      /* eslint-enable max-len */
+      return pattern.test(date);
     },
   };
+
+  /**
+   * Escape html characters
+   * @param  {String} string  text with characters to escape
+   * @return {string}         escaped text
+   */
+  function escapeHtml(string) {
+    return String(string).replace(/[&<>"'\/]/g, function (s) {
+      return entityMap[s];
+    });
+  }
 
   /**
    * Put the models received as arguments in a container
@@ -66,9 +119,13 @@
    */
   function setModels(self, Models) {
     var modelsCount = Object.keys(Models).length;
+    var i = 0;
+    var key;
+    /* eslint-disable no-param-reassign */
     self.$models = [];
-    for (var i = 0; i < modelsCount; i++) {
-      var key = Object.keys(Models)[i];
+    /* eslint-enable no-param-reassign */
+    for (i; i < modelsCount; i++) {
+      key = Object.keys(Models)[i];
       self.$models.push(key);
     }
   }
@@ -88,10 +145,7 @@
     this.$element = $(el);
     this.$element.hide();
 
-    self.hasGlobal = false;
-
-    this.$plus = $(options.dropdownShowIcon || '<i class="fa fa-plus"></i>');
-    // this.$minus = $(options.dropdownHideIcon || '<i class="fa fa-minus"></i>');
+    this.$plus = $(options.plus || defaultOptions.plus);
 
     this.$wrapper = $('<div class="filter-wrapper"></div>');
     this.$plusButton = $('<button class="filter-addButton" title="Add query"></button>');
@@ -104,49 +158,209 @@
 
     this.$selectedModel = undefined;
 
-    this.$globalGroup = $('<div class="filter-global-group"></div>');
-    this.$globalGroupContainer = $('<div class="filter-global-group-container"></div>');
-
-    this.$selectionOptionsContainer = $('<div class="filter-dropdown"></div>');
     this.$groupSelection = $('<li>Add Group</li>');
     this.$condition = $('<li>Add Condition</li>');
     this.$addModel = $('<li data-type="model">Model</li>');
 
-
     this.$element.before(this.$wrapper);
     this.$wrapper.append(this.$container);
-    this.$container.after(this.$selectionOptionsContainer);
     this.$container.after(this.$plusButton);
 
     this.$plusButton.html(this.$plus);
 
+    this.$query = {};
+
     this.init();
   }
 
-  function addRules(self) {
+  /**
+   * Get the models as a selectable menu with each model as an option
+   * @param  {Object} self       the object containing the plugin
+   * @return {HTML element}      element with the options
+   */
+  function getModelsAsOptions(self) {
+    var selectModel = $('<div class="filter-models-wrapper"></div>');
+    var selectModelHeader = $('<div class="filter-models-select" data-value="">Select Model</div>');
+    var selectModelOptions = $('<ul class="filter-models-options"></ul>');
+    var val;
+    if (self.$models) {
+      self.$models.forEach(function (value) {
+        var option = $('<li data-value="' + value + '">' + value + '</li>');
+        selectModelOptions.append(option);
+        option.click(function () {
+          if (!option.hasClass('disabled')) {
+            val = $(this).data('value');
+            selectModelHeader.data('value', val).html(val);
+            selectModelHeader.trigger('change');
+            selectModelOptions.hide();
+          }
+          return false;
+        });
+      });
+    } else {
+      selectModelOptions
+        .append($('<li class="disabled">No Models defined.</li>'));
+    }
+
+    selectModel.append(selectModelHeader).append(selectModelOptions.menu().hide());
+
+    selectModelHeader.click(function () {
+      selectModelOptions.show().position({
+        my: 'center-8 top',
+        at: 'right bottom',
+        of: this
+      });
+      return false;
+    });
+    $(document).on('click', function () {
+      selectModelOptions.hide();
+      return false;
+    });
+
+    return selectModel;
+  }
+
+  /**
+   * Get the input for user search and the models as a selectable menu with each model as an option
+   * @param  {Object} self       the object containing the plugin
+   * @return {HTML element}      element with the input and options
+   */
+  function getModelsInput(self) {
+    var textInput = $('<input type="text" />');
+    var selectModel = $('<ul class="filter-models-options"></ul>');
+    var textAndModel = $('<div class="filter-input-select"></div>');
+
+    if (self.$models) {
+      self.$models.forEach(function (value) {
+        var option = $('<li data-value="' + value + '">' + value + '</li>');
+        selectModel.append(option);
+        option.click(function () {
+          if (!option.hasClass('disabled')) {
+            textInput.val(option.data('value'));
+            textInput.change();
+            textInput.blur();
+          }
+          return false;
+        });
+      });
+    } else {
+      /* eslint-disable vars-on-top */
+      var option = $('<li class="disabled" data-value="">No Models defined.</li>');
+      /* eslint-enable vars-on-top */
+      selectModel.append(option);
+      option.click(function () {
+        textInput.val(option.data('value'));
+        selectModel.hide();
+        return false;
+      });
+    }
+
+    selectModel.menu().hide();
+
+    textInput.focus(function () {
+      selectModel.show().position({
+        my: 'center-20 top',
+        at: 'right bottom',
+        of: this
+      });
+    });
+
+    textInput.blur(function () {
+      selectModel.hide();
+    });
+
+    textAndModel.append(textInput).append(selectModel);
+    return textAndModel;
+  }
+
+  /**
+   * Sets the models as options in the received element
+   * @param  {object} self          the object containing the plugin
+   * @param  {HTML element} element the element that will receive the options
+   * @param  {string} selectedModel the model from which to get the options
+   */
+  function getOptionsFromModel(self, element, selectedModel) {
+    var options = selectedModel ? self.options.Models[selectedModel] : undefined;
+    var key;
+
+    if (!options) {
+      element.append($('<option disabled selected>No Models Selected.</option>'));
+    } else {
+      element
+        .append($('<option disabled selected>Select Option</option>'));
+      /* eslint-disable guard-for-in */
+      for (key in options) {
+        /* eslint-disable vars-on-top */
+        var li = $('<option value="' + key + '" data-validation="' +
+          options[key] + '">' + key + '</option>');
+        /* eslint-enable vars-on-top */
+        element.append(li);
+      }
+      /* eslint-enable guard-for-in */
+    }
+  }
+
+  /**
+   * Set the list of conditions available for received type
+   * @param  {HTML element} element the element that will receive the conditions
+   * @param  {string} type          the type of data
+   */
+  function getRuleCondition(element, type) {
+    var paramType = type || 'text';
+    var key;
+    /* eslint-disable guard-for-in */
+    for (key in rules[paramType]) {
+      /* eslint-disable vars-on-top */
+      var li = $('<option value="' + key + '">' + key + '</option>');
+      /* eslint-enable vars-on-top */
+      element.append(li);
+    }
+    /* eslint-enable guard-for-in */
+  }
+
+  /**
+   * Creates a rule condition to add to a group
+   * @param {object} self        the object containing the plugin
+   * @param {HTML elemnt} parent the main parent container of the query
+   * @return {HTML element}      the created element
+   */
+  function addRule(self, parent) {
     var ruleOptionsContainer = $('<div class="filter-rule-dropdown"></div>');
     var input = $('<input type="text"></input>');
-    var condition = $('<p> IN </p>');
+    var condition = $('<select></select>');
     var where = $('<select></select>');
-    var removeButton = $(' <span class="btn remove"><i class="fa fa-minus"></i></span>');
+    var removeButton = $(' <span class="btn remove" title="Remove Rule">―</span>');
 
-    getOptionsFromModel(self, where);
+    var value = $(parent).find('.filter-models-wrapper')
+      .find('.filter-models-select').data('value');
 
-    self.$selectModels.on('updaterules:options', function() {
+    getRuleCondition(condition);
+    getOptionsFromModel(self, where, value);
+
+    parent.on('update:model', function (e, el) {
       where.children().remove();
-      getOptionsFromModel(self, where);
+      getOptionsFromModel(self, where, $(el).data('value'));
     });
-    removeButton.on('click', function() {
+    where.on('change', function () {
+      condition.children().remove();
+      /* eslint-disable vars-on-top */
+      var type = where.find(':selected').data('validation');
+      /* eslint-enable vars-on-top */
+      getRuleCondition(condition, type);
+      if (type === 'date') {
+        input.datepicker();
+      } else {
+        input.datepicker('destroy');
+      }
+    });
+    removeButton.on('click', function () {
       $(this).parent().remove();
+      return false;
     });
-    where.change(function() {
-      var el = $(this).val()
-    });
-    input.change(function() {
-      console.log(validation[where.find(':selected').data().validation](content));
+    input.change(function () {
       var el = $(this);
       var content = el.val();
-      if(!validation[where.find(':selected').data().validation](content)) {
+      if (!validation[where.find(':selected').data('validation')](content)) {
         el.removeClass('valid').addClass('invalid');
       } else {
         el.removeClass('invalid').addClass('valid');
@@ -158,333 +372,218 @@
     return ruleOptionsContainer;
   }
 
-  function newGroup(self, type) {
-    var group = $('<div class="filter-group-' + type + '"><div>');
-    var removeButton = $(' <span class="btn remove"><i class="fa fa-minus"></i></span>');
-    var addButton = $(' <span class="btn add"><i class="fa fa-plus"></i></span>');
-
-    removeButton.on('click', function() {
-      $(this).parent().remove();
-      if (self.$container.children().length === 1)
-        self.$selectModels.removeClass('filter-models-after');
-    });
-    addButton.on('click', function() {
-      addRules(self).insertBefore($(this));
-    });
-
-    group
-      .append(addButton)
-      .append(removeButton.hide())
-      .hover(
-        function() {
-          removeButton.show();
-        },
-        function() {
-          removeButton.hide();
-        }
-      );
-    return group;
-  }
-
-  function addGlobalGroup(self, type) {
-    var removeButton = $(' <span class="btn remove"><i class="fa fa-minus"></i></span>');
+  /**
+   * Creates a group to add rules to
+   * @param {object} self        the object containing the plugin
+   * @param {HTML elemnt} parent the main parent container of the query
+   * @return {HTML element}      the created element
+   */
+  function addGroup(self, parent) {
+    var group = $('<div class="filter-group"></div>');
+    var groupContainer = $('<div class="filter-group-container"></div>');
+    var leftParentheses = $('<span>(</span>');
+    var rightParentheses = $('<span>)</span>');
+    var removeButton = $(' <span class="btn remove" title="Remove group">―</span>');
+    var addButton = $('<span class="btn add" title="Add rule">+</span>');
     var select = $('<select name="group"></select>');
-    self.hasGlobal = true;
 
-    removeButton.on('click', function() {
+    removeButton.on('click', function () {
       $(this).parent().remove();
-      self.clearGlobalGroup();
+      return false;
     });
-    select.append($('<option value="AND" ' + (type === 'AND' ? 'selected' : '') + '>AND</option>'));
-    select.append($('<option value="OR" ' + (type === 'OR' ? 'selected' : '') + '>OR</option>'));
+    addButton.on('click', function () {
+      groupContainer.append(addRule(self, parent));
+      return false;
+    });
 
-    return self.$globalGroup.html(select).append(self.$globalGroupContainer).append(removeButton);
+    select.append($('<option value="AND" selected<>AND</option>'));
+    select.append($('<option value="OR">OR</option>'));
+
+    return group.append(select).append(leftParentheses)
+      .append(groupContainer).append(addButton)
+      .append(rightParentheses).append(removeButton);
   }
 
-  function getModels(self){
-    var selectModel = $('<div class="filter-models-wrapper"></div>');
-    var selectModelHeader = $('<div class="filter-models-select" data-value="">Select Model</div>');
-    var selectModelOptions = $('<ul class="filter-models-options"></ul>');
-    if (self.$models) {
-      self.$models.forEach(function(value) {
-        var option = $('<li data-value="' + value + '">' + value + '</li>');
-        selectModelOptions.append(option);
-        option.click(function () {
-          var val = $(this).data('value');
-          selectModelHeader.data('value', val).html(val);
-          selectModelOptions.hide();
-        });
-      });
-    } else {
-      selectModelOptions
-        .append($('<li disabled selected>No Models defined.</li>'));
-    }
+  /**
+   * Creates a global group to add groups
+   * @param {object} self        the object containing the plugin
+   * @param {HTML elemnt} parent the main parent container of the query
+   * @return {HTML element}      the created element
+   */
+  function addGlobalGroup(self, parent) {
+    var globalGroup = $('<div class="filter-global-group"></div>');
+    var removeButton = $(' <span class="btn remove" title="Remove Global Group">―</span>');
+    var select = $('<select name="group"></select>');
+    var leftParentheses = $('<span>(</span>');
+    var rightParentheses = $('<span>)</span>');
 
-    selectModel.append(selectModelHeader).append(selectModelOptions.hide());
+    removeButton.on('click', function () {
+      $(this).parent().remove();
+      return false;
+    });
+    select.append($('<option value="AND" selected>AND</option>'));
+    select.append($('<option value="OR">OR</option>'));
 
-    selectModelHeader.click(function (){
-      selectModelOptions.show();
+    globalGroup.on('add:group', function () {
+      addGroup(self, parent).insertBefore(rightParentheses, globalGroup);
     });
 
-    return selectModel;
+    return globalGroup.append(removeButton).append(select)
+      .append(leftParentheses).append(rightParentheses);
   }
 
-  function getModelsInput(self){
-    var textInput = $('<input type="text" />');
-    var selectModel = $('<ul class="filter-models-options"></ul>');
-    if (self.$models) {
-      self.$models.forEach(function(value) {
-        var option = $('<li data-value="' + value + '">' + value + '</li>');
-        selectModel.append(option);
-        option.mousedown(function () {
-          textInput.val(option.data('value'));
-        });
-      });
-    } else {
-      var option = $('<li data-value="">No Models defined.</li>');
-      selectModel.append(option);
-      option.mousedown(function () {
-          textInput.val(option.data('value'));
-          selectModel.hide();
-        });
-    }
-
-    selectModel.menu().hide();
-
-    textInput.focus(function () {
-      selectModel.show().position({
-          my: "right top",
-          at: "right bottom",
-          of: this
-        });
-    });
-
-    textInput.blur(function () {
-      selectModel.hide();
-    });
-
-
-    var textAndModel = $('<div class="filter-input-select"></div>');
-    textAndModel.append(textInput).append(selectModel);
-    return textAndModel;
-  }
-
-  function getModelsAsOptions(self) {
+  /**
+   * Creates the main query
+   * @param {object} self        the object containing the plugin
+   */
+  function getMainQuery(self) {
     var modelsContainer = $('<div class="filter-models-query-container"></div>');
+    var selectANDOR = $('<select class="filter-model-rule"><option value="AND">AND' +
+      '</option><option value="OR">OR</option></select>');
+
     var state = 'clickedOnce';
-    if(self.state === 'init') {
+    if (self.state === 'init') {
       state = 'init';
     }
-    var removeButton = $('<span class="btn remove" title="Remove query"><i class="fa fa-minus"></i></span>').on('click', function() {
-      modelsContainer.remove();
-      self.state = state;
-    });
+    /* eslint-disable vars-on-top */
+    var removeButton = $('<span class="btn remove" title="Remove query">―</span>')
+      .on('click', function () {
+        modelsContainer.remove();
+        /* eslint-disable no-param-reassign */
+        self.state = state;
+        /* eslint-disable no param-reassign */
+      });
     var selectModel1 = getModelsInput(self);
-    var selectModel2 = getModels(self);
-    var rule = $('<select class="filter-model-rule"><option value="in">in</option><option value="notin">not in</option></select>');
-    var addButton = $('<span class="btn add" title="Add conditions"><i class="fa fa-plus"></i></span>').on('click', function() {
-      self.addGroup('AND');
+    var selectModel2 = getModelsAsOptions(self);
+    var rule = $('<select class="filter-model-rule"><option value="in">in</option>' +
+      '<option value="notin">not in</option></select>');
+    var addButton = $('<span class="btn add" title="Add group condition">+</span>');
+
+    var globalGroup = addGlobalGroup(self, modelsContainer);
+    /* eslint-enable vars-on-top */
+
+    addButton.on('click', function () {
+      if (modelsContainer.find('.filter-global-group').length) {
+        globalGroup.trigger('add:group');
+      } else {
+        globalGroup = addGlobalGroup(self, modelsContainer);
+        globalGroup.trigger('add:group');
+        modelsContainer.append(globalGroup);
+      }
+      return false;
     });
 
-    var selectANDOR = $('<select class="filter-model-rule"><option value="AND">AND</option><option value="OR">OR</option></select>');
+    selectModel1.find('input').on('change', function (e) {
+      var value = escapeHtml($(e.target).val());
+      selectModel2.find('[data-value]').removeClass('disabled');
+      /* eslint-disable vars-on-top */
+      var elem = selectModel2.find('li[data-value="' + value + '"]');
+      /* eslint-enable vars-on-top */
+      if (elem.length) {
+        elem.addClass('disabled');
+      }
+    });
 
-    // selectModel1.change(function() {
-    //   var idx = $(this).prop('selectedIndex');
-    //   selectModel2.find('option').each(function () {
-    //     $(this).prop('disabled', false);
-    //   });
-    //   selectModel2.prop("selectedIndex", idx);
-    // });
-    // selectModel2.change(function() {
-    //   self.$selectedModel = $(this).val();
-    //   $(this).parent().trigger('updaterules:options');
-    // });
-    if(self.state !== 'init') {
+    selectModel2.find('div').on('change', function (e) {
+      modelsContainer.trigger('update:model', e.target);
+      /* eslint-disable vars-on-top */
+      var value = escapeHtml($(e.target).data('value'));
+      /* eslint-enable vars-on-top */
+      selectModel1.find('[data-value]').removeClass('disabled');
+      /* eslint-disable vars-on-top */
+      var elem = selectModel1.find('li[data-value="' + value + '"]');
+      /* eslint-enable vars-on-top */
+      if (elem.length) {
+        elem.addClass('disabled');
+      }
+    });
+
+    if (self.state !== 'init') {
       modelsContainer.append(selectANDOR);
     }
 
     modelsContainer.append(removeButton).append(selectModel1)
       .append(rule).append(selectModel2).append(addButton);
-    self.$selectModels.append(modelsContainer)
+    self.$selectModels.append(modelsContainer);
     self.$container.append(self.$selectModels);
   }
 
-  function getOptionsFromModel(self, element) {
-    var options = self.$selectedModel ? self.options.Models[self.$selectedModel] : undefined;
-
-    if (!options) {
-      var li = $('<option disabled selected>No Models Selected.</option>');
-      element
-        .append(li);
-    } else {
-      element
-        .append($('<option disabled selected>Select Option</option>'));
-    }
-    for (var key in options) {
-      var li = $('<option value="' + key + '" data-validation="' + options[key] + '">' + key + '</option>');
-      li.on('mousedown', function() {
-        console.log($(this).data());
-      });
-      element
-        .append(li);
-    }
+  /**
+   * Send the query to the server to do the search
+   */
+  function sendQuery() {
+    // TODO
   }
-
-  var states = function(self) {
-    return {
-      init: function() {
-        self.$selectionOptionsContainer.children().remove();
-        getModelsAsOptions(self);
-        self.state = 'groupsList';
-      },
-      listOptions: function() {
-        self.$selectionOptionsContainer.children().remove();
-        self.$selectionOptionsContainer
-          .append(self.$groupSelection)
-          .append(self.$condition);
-        self.$groupSelection.on('click', function(e) {
-          self.clickOption('AND');
-        });
-        self.$condition.on('click', function(e) {
-          self.clickOption('OR');
-        });
-      },
-      groupsList: function() {
-        self.$selectionOptionsContainer.children().remove();
-        self.$selectionOptionsContainer
-          .append(self.$groupSelection)
-          .append(self.$condition);
-        self.$groupSelection.on('click', function(e) {
-          self.clickOption('AND');
-        });
-        self.$condition.on('click', function(e) {
-          self.clickOption('OR');
-        });
-      },
-    }
-  };
-
+  /**
+   * Extend the plugin to add more functions
+   * @type {Object}
+   */
   UnifiedSearchFilter.prototype = {
     constructor: UnifiedSearchFilter,
 
-    init: function() {
+    /**
+     * Initialize the plugin
+     */
+    init: function () {
       var self = this;
-      // $(document).unbind('mousedown').mousedown(function(event) {
-      //   if (!$(event.target).closest('.filter-dropdown').length) {
-      //     if ($('.filter-addButton').hasClass('active')) {
-      //       $('.filter-addButton').removeClass('active');
-      //       $('.filter-addButton').html(self.$plus);
-      //       $('.filter-dropdown').slideUp(100).removeClass('open');
-      //     }
-      //   }
-      // });
 
-      this.closeAccordion = function() {
-        self.$plusButton.removeClass('active');
-        self.$selectionOptionsContainer.slideUp(100).removeClass('open');
-      };
-
-      this.openAccordion = function() {
-        self.$plusButton.addClass('active');
-        self.$selectionOptionsContainer.slideDown(100).addClass('open');;
-      };
-
-      this.clickOption = function(groupType) {
-        self.$selectModels.addClass('filter-models-after');
-        self.addGroup(groupType);
-        self.closeAccordion();
-        self.$plusButton.html(self.$plus);
-      };
-
-      this.$plusButton.on('click', function(e) {
-        getModelsAsOptions(self);
+      this.$plusButton.on('click', function () {
+        getMainQuery(self);
         self.state = 'clickedOnce';
-        // if (self.state !== 'init') {
-        //   if ($(this).hasClass('active')) {
-        //     self.closeAccordion();
-        //     $(this).html(self.$plus)
-        //   } else {
-        //     self.closeAccordion();
-        //     $(this).html(self.$minus)
-        //     self.openAccordion();
-        //   }
-        // }
-
-        // states(self)[self.state]();
-
-        e.preventDefault();
+        return false;
       });
 
       $(document).tooltip({
         position: {
-          my: "center bottom-20",
-          at: "center top",
-          using: function( position, feedback ) {
-            $( this ).css( position );
-            $( "<div>" )
-              .addClass( "arrow" )
-              .addClass( feedback.vertical )
-              .addClass( feedback.horizontal )
-              .appendTo( this );
+          my: 'center bottom-20',
+          at: 'center top',
+          using: function (position, feedback) {
+            $(this).css(position);
+            $('<div>')
+              .addClass('arrow')
+              .addClass(feedback.vertical)
+              .addClass(feedback.horizontal)
+              .appendTo(this);
           }
         }
       });
     },
 
-    destroy: function() {
-      $(document).unbind('mouseup')
+    /**
+     * Destroys the plugin
+     */
+    destroy: function () {
       this.$container.remove();
-      this.$selectionOptionsContainer.remove();
       this.$plusButton.remove();
       this.$element.removeData('unifiedSearchFilter');
       this.$element.show();
     },
 
-    addGroup: function(type) {
-      var self = this;
-      if (!self.hasGlobal) {
-        this.$container.append(addGlobalGroup(self, type));
-      } else {
-        this.$globalGroupContainer.append(newGroup(self, type));
-      }
-    },
-
-    addCondition: function() {
-      var self = this;
-
-    },
-
-    clearAll: function() {
-      this.$selectModels.removeClass('filter-models-after');
+    /**
+     * Clears all data from the querys
+     */
+    clearAll: function () {
       this.$container.children().remove();
-      this.$globalGroup.children().remove();
-      this.$globalGroupContainer.children().remove();
-      this.hasGlobal = false;
       this.$selectedModel = '';
       this.state = 'init';
-    },
-
-    clearGlobalGroup: function() {
-      this.hasGlobal = false;
-      this.$globalGroup.children().remove();
-      this.$globalGroupContainer.children().remove();
-      if (this.$container.children().length === 1) this.$selectModels.removeClass('filter-models-after');
     },
   };
 
   /**
    * Register JQuery plugin
    */
-  $.fn.unifiedSearchFilter = function(args) {
+  $.fn.unifiedSearchFilter = function (args) {
     var results = [];
-    this.each(function() {
+    this.each(function () {
       var unifiedSearchFilter = $(this).data('unifiedSearchFilter');
       if (!unifiedSearchFilter) {
         unifiedSearchFilter = new UnifiedSearchFilter(this, args);
         $(this).data('unifiedSearchFilter', unifiedSearchFilter);
-        results.push(unifiedSearchFilter)
+        results.push(unifiedSearchFilter);
       } else if (unifiedSearchFilter[args]) {
+        /* eslint-disable vars-on-top */
         var retVal = unifiedSearchFilter[args]();
+        /* eslint-enable vars-on-top */
         if (retVal) {
           results.push(retVal);
         }
@@ -493,11 +592,11 @@
 
     if (typeof args === 'string') {
       return results.length > 1 ? results : results[0];
-    } else {
-      return results;
     }
+    return results;
   };
 
   $.fn.unifiedSearchFilter.Constructor = UnifiedSearchFilter;
-
+/* eslint-disable no-undef */
 })(jQuery);
+/* eslint-enable no-undef */
