@@ -70,9 +70,14 @@ Models: {
 }
 ```
 can represent the searchable data in this table:
-| id  | firstName | lastName | info |
-| --- | --------- | -------- | ---- |
-|     |           |          |      |
+<table>
+  <tr>
+    <th>id</th>
+    <th>firstName</th>
+    <th>lastName</th>
+    <th>info</th>
+  </tr>
+</table>
 - plus: The icon or text you want to show on the plus buttons.
 - minus: The icon or text you want to show on the minus buttons.
 - endpoint (**required**): The URL you want the query to be sent. (*'/search'* by default).
