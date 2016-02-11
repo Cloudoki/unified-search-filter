@@ -7,7 +7,8 @@
     "example": "examples"
   },
   "scripts": {
-    "lint": "eslint ./"
+    "lint": "eslint ./",
+    "example": "http-server ./"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
   "homepage": "https://github.com/Cloudoki/unified-search-filter#readme",
   "devDependencies": {
     "eslint": "^1.10.3",
-    "eslint-config-airbnb": "^3.1.0"
+    "eslint-config-airbnb": "^3.1.0",
+    "http-server": "^0.8.5"
   }
 }

@@ -103,7 +103,7 @@
     /**
      * Validates date
      * @param  {string} date date to be tested
-     * @return {boolean}     returns true if it's a date
+     * @return {boolean}     returns true if it's a valid date
      */
     date: function (date) {
       /* eslint-disable max-len */
@@ -150,7 +150,6 @@
   function UnifiedSearchFilter(el, options) {
     var self = this;
     this.options = options || {};
-    this.state = 'init';
 
     if (options.Models) setModels(self, options.Models);
 
@@ -192,7 +191,7 @@
 
   /**
    * Get the models as a selectable menu with each model as an option
-   * @param  {Object} self       the object containing the plugin
+   * @param {Object} self        the object containing the plugin
    * @param {HTML elemnt} parent the main parent container of the query
    * @return {HTML element}      element with the options
    */
@@ -361,7 +360,7 @@
     var input = $('<input type="text"></input>');
     var condition = $('<select></select>');
     var where = $('<select></select>');
-    var removeButton = $(' <span class="btn remove" title="Remove Rule">' +
+    var removeButton = $(' <span class="filter-btn filter-remove" title="Remove Rule">' +
       defaultOptions.minus + '</span>');
 
     var value = $(parent).find('.filter-models-wrapper')
@@ -399,7 +398,7 @@
     });
     removeButton.on('click', function () {
       $(this).parent().remove();
-      groups.splice(groups.indexOf(rule), 1);
+      groups.rules.splice(groups.rules.indexOf(rule), 1);
       return false;
     });
     input.change(function () {
@@ -433,9 +432,10 @@
     var groupContainer = $('<div class="filter-group-container"></div>');
     var leftParentheses = $('<span class="parentheses">(</span>');
     var rightParentheses = $('<span class="parentheses">)</span>');
-    var removeButton = $(' <span class="btn remove" title="Remove group">' +
+    var removeButton = $(' <span class="filter-btn filter-remove" title="Remove group">' +
       defaultOptions.minus + '</span>');
-    var addButton = $('<span class="btn add" title="Add rule">' + defaultOptions.plus + '</span>');
+    var addButton = $('<span class="filter-btn filter-add" title="Add rule">' +
+      defaultOptions.plus + '</span>');
     var select = $('<select name="group"></select>');
 
     var groups = {
@@ -477,7 +477,7 @@
    */
   function addGlobalGroup(self, parent) {
     var globalGroup = $('<div class="filter-global-group"></div>');
-    var removeButton = $(' <span class="btn remove" title="Remove Global Group">' +
+    var removeButton = $(' <span class="filter-btn filter-remove" title="Remove Global Group">' +
       defaultOptions.minus + '</span>');
     var select = $('<select name="group"></select>');
     var leftParentheses = $('<span class="parentheses">(</span>');
@@ -509,9 +509,10 @@
 
   /**
    * Creates the main query
-   * @param {object} self        the object containing the plugin
+   * @param {object} self              the object containing the plugin
+   * @param {boolean} hasInitialQuery  indicates if fist query exist
    */
-  function getMainQuery(self) {
+  function getMainQuery(self, hasInitialQuery) {
     var dataquery = {
       search: '',
       condition: 'in',
@@ -522,35 +523,37 @@
       }
     };
     var modelsContainer = $('<div class="filter-models-query-container"></div>');
-    var selectANDOR = $('<select class="filter-model-rule"><option value="AND">AND' +
-      '</option><option value="OR">OR</option></select>');
 
-    var state = 'clickedOnce';
-    if (self.state === 'init') {
-      state = 'init';
-    }
     self.$query.queries.push(dataquery);
     modelsContainer.data('dataquery', dataquery);
     /* eslint-disable vars-on-top */
-    var removeButton = $('<span class="btn remove" title="Remove query">' +
-      defaultOptions.minus + '</span>')
-      .on('click', function () {
-        modelsContainer.remove();
-        /* eslint-disable no-param-reassign */
-        self.state = state;
-        /* eslint-disable no param-reassign */
-        var index = self.$query.queries.indexOf(dataquery);
-        self.$query.queries.splice(index, 1);
-      });
+    var removeButton = $('<span class="filter-btn filter-remove" title="Remove query">' +
+      defaultOptions.minus + '</span>');
     var selectModel1 = getModelsInput(self, modelsContainer);
     var selectModel2 = getModelsAsOptions(self, modelsContainer);
     var rule = $('<select class="filter-model-rule"><option value="in">in</option>' +
       '<option value="notin">not in</option></select>');
-    var addButton = $('<span class="btn add" title="Add group condition">' +
+    var addButton = $('<span class="filter-btn filter-add" title="Add group condition">' +
       defaultOptions.plus + '</span>');
 
     var globalGroup = addGlobalGroup(self, modelsContainer);
     /* eslint-enable vars-on-top */
+
+    removeButton.on('click', function () {
+      modelsContainer.remove();
+      /* eslint-disable vars-on-top */
+      var index = self.$query.queries.indexOf(dataquery);
+      /* eslint-enable vars-on-top */
+      self.$query.queries.splice(index, 1);
+      if (!$('[data-role="initialQuery"]').length &&
+        $('.filter-models-query-container').length) {
+        $('.filter-models-query-container:first').attr('data-role', 'initialQuery')
+          .find('select.filter-model-rule:first').remove();
+        /* eslint-disable no-param-reassign */
+        delete self.$query.queries[0].queryCondition;
+        /* eslint-enable no-param-reassign */
+      }
+    });
 
     addButton.on('click', function () {
       if (modelsContainer.find('.filter-global-group').length) {
@@ -592,8 +595,18 @@
       dataquery.condition = rule.val();
     });
 
-    if (self.state !== 'init') {
-      modelsContainer.append(selectANDOR);
+    if (hasInitialQuery) {
+      /* eslint-disable vars-on-top */
+      var queryCondition = $('<select class="filter-model-rule">' +
+        '<option value="AND">AND</option><option value="OR">OR</option></select>');
+      /* eslint-enable vars-on-top */
+      modelsContainer.append(queryCondition);
+      dataquery.queryCondition = queryCondition.val();
+      queryCondition.change(function () {
+        dataquery.queryCondition = queryCondition.val();
+      });
+    } else {
+      modelsContainer.attr('data-role', 'initialQuery');
     }
 
     modelsContainer.append(removeButton).append(selectModel1)
@@ -631,8 +644,8 @@
       var self = this;
 
       this.$plusButton.on('click', function () {
-        getMainQuery(self);
-        self.state = 'clickedOnce';
+        var initialQuery = $('[data-role="initialQuery"]').length > 0;
+        getMainQuery(self, initialQuery);
         return false;
       });
 
@@ -672,14 +685,15 @@
     clearAll: function () {
       this.$container.children().remove();
       this.$selectedModel = '';
-      this.state = 'init';
     },
   };
 
   /**
    * Register JQuery plugin
    */
+  /* eslint-disable no-param-reassign */
   $.fn.unifiedSearchFilter = function (args) {
+  /* eslint-enable no-param-reassign */
     var results = [];
     this.each(function () {
       var unifiedSearchFilter = $(this).data('unifiedSearchFilter');
@@ -702,8 +716,9 @@
     }
     return results;
   };
-
+  /* eslint-disable no-param-reassign */
   $.fn.unifiedSearchFilter.Constructor = UnifiedSearchFilter;
+  /* eslint-enable no-param-reassign */
 /* eslint-disable no-undef */
 })(jQuery);
 /* eslint-enable no-undef */
