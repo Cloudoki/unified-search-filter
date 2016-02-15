@@ -458,6 +458,12 @@
     select.append($('<option value="AND" selected<>AND</option>'));
     select.append($('<option value="OR">OR</option>'));
 
+    if(!parent.data('dataquery').global) {
+      parent.data('dataquery').global = {
+        condition: 'AND',
+        groups: []
+      };
+    }
     parent.data('dataquery').global.groups.push(groups);
 
     select.change(function () {
