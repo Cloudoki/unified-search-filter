@@ -9,6 +9,7 @@
     plus: '<span>+</span>',
     minus: '<span>―</span>',
     endpoint: '/search',
+    simple: false,
     success: function (data) {
       /* eslint-disable no-console */
       console.log(data);
@@ -458,11 +459,13 @@
     select.append($('<option value="AND" selected<>AND</option>'));
     select.append($('<option value="OR">OR</option>'));
 
-    if(!parent.data('dataquery').global) {
+    if (!parent.data('dataquery').global) {
+      /* eslint-disable no-param-reassign */
       parent.data('dataquery').global = {
         condition: 'AND',
         groups: []
       };
+      /* eslint-enable no-param-reassign */
     }
     parent.data('dataquery').global.groups.push(groups);
 
@@ -626,15 +629,22 @@
    */
   function sendQuery(self) {
     var data = JSON.stringify(self.$query);
-    $.ajax({
-      type: 'POST',
-      url: self.options.endpoint || defaultOptions.endpoint,
-      data: data,
-      contentType: 'application/json; charset=utf-8',
-      dataType: 'json',
-      success: self.options.success || defaultOptions.success,
-      error: self.options.error || defaultOptions.error
-    });
+
+    // TODO: verify if fields are valid
+
+    if(self.options.onQuery) {
+      self.options.onQuery(self.$query);
+    } else {
+      $.ajax({
+        type: 'POST',
+        url: self.options.endpoint || defaultOptions.endpoint,
+        data: data,
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        success: self.options.success || defaultOptions.success,
+        error: self.options.error || defaultOptions.error
+      });
+    }
   }
   /**
    * Extend the plugin to add more functions
@@ -673,6 +683,8 @@
       $('[data-role="searchButton"]').click(function () {
         sendQuery(self);
       });
+
+      getMainQuery(self, false);
     },
 
     /**
