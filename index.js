@@ -232,7 +232,7 @@
     });
     $(document).on('click', function () {
       selectModelOptions.hide();
-      return false;
+      // return false;
     });
 
     selectModelHeader.change(function () {
